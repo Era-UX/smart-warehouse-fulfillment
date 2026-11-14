@@ -14,12 +14,12 @@ This project models an automated warehouse fulfillment and carrier dispatch work
 
 ## How the 6 Patterns Work Together
 
-1. Builder Pattern (Student 1): FulfillmentOrder.Builder constructs immutable shipment orders step by step and rejects invalid inputs (negative weight, missing items, invalid email) using IllegalArgumentException.
-2. Observer Pattern (Student 1): OrderTrackingSubject notifies WarehouseDashboardNotifier, CustomerNotificationSubscriber, and AuditLogSubscriber whenever an order moves from CREATED to INSPECTED_AND_PACKED, CARRIER_ASSIGNED, and IN_TRANSIT.
-3. Decorator Pattern (Student 3): StandardOrderPackage is wrapped at runtime with FragileHandlingDecorator, InsuranceCoverageDecorator, and ColdChainThermalDecorator to stack extra packaging weight, handling fees, and care instructions without subclass explosion.
-4. Strategy Pattern (Student 2): CostCalculationStrategy calculates transit tariffs dynamically using StandardGroundCostStrategy, ExpressAirCostStrategy (accounting for dimensional weight), or EcoFreightCostStrategy.
-5. Factory Method Pattern (Student 2): CarrierFactory subclasses (KazPostCarrierFactory, DHLCarrierFactory, FedExCarrierFactory) instantiate the appropriate Carrier implementation without coupling the fulfillment pipeline to specific courier classes.
-6. Facade Pattern (Student 3): WarehouseFulfillmentFacade coordinates safety checks, observer updates, package decoration, shipping cost calculation, and carrier dispatch behind simple methods such as processStandardGroundOrder and processColdChainMedicalOrder.
+1. Builder Pattern (Yerassyl): FulfillmentOrder.Builder constructs immutable shipment orders step by step and rejects invalid inputs (negative weight, missing items, invalid email) using IllegalArgumentException.
+2. Observer Pattern (Yerassyl): OrderTrackingSubject notifies WarehouseDashboardNotifier, CustomerNotificationSubscriber, and AuditLogSubscriber whenever an order moves from CREATED to INSPECTED_AND_PACKED, CARRIER_ASSIGNED, and IN_TRANSIT.
+3. Decorator Pattern (Zhanibek): StandardOrderPackage is wrapped at runtime with FragileHandlingDecorator, InsuranceCoverageDecorator, and ColdChainThermalDecorator to stack extra packaging weight, handling fees, and care instructions without subclass explosion.
+4. Strategy Pattern (Temirlan): CostCalculationStrategy calculates transit tariffs dynamically using StandardGroundCostStrategy, ExpressAirCostStrategy (accounting for dimensional weight), or EcoFreightCostStrategy.
+5. Factory Method Pattern (Temirlan): CarrierFactory subclasses (KazPostCarrierFactory, DHLCarrierFactory, FedExCarrierFactory) instantiate the appropriate Carrier implementation without coupling the fulfillment pipeline to specific courier classes.
+6. Facade Pattern (Zhanibek): WarehouseFulfillmentFacade coordinates safety checks, observer updates, package decoration, shipping cost calculation, and carrier dispatch behind simple methods such as processStandardGroundOrder and processColdChainMedicalOrder.
 
 ## Clean Code Principles Applied (Robert C. Martin)
 
