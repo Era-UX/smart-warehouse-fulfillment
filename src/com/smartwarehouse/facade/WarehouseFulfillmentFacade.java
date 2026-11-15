@@ -8,6 +8,7 @@ import com.smartwarehouse.model.OrderStatus;
 import com.smartwarehouse.order.builder.FulfillmentOrder;
 import com.smartwarehouse.order.observer.AuditLogSubscriber;
 import com.smartwarehouse.order.observer.CustomerNotificationSubscriber;
+import com.smartwarehouse.order.observer.OrderSubject;
 import com.smartwarehouse.order.observer.OrderTrackingSubject;
 import com.smartwarehouse.order.observer.WarehouseDashboardNotifier;
 import com.smartwarehouse.packaging.decorator.ColdChainThermalDecorator;
@@ -29,14 +30,14 @@ import java.util.Objects;
  * carrier creation, and observer notifications behind a single interface.
  */
 public class WarehouseFulfillmentFacade {
-    private final OrderTrackingSubject trackingSubject;
+    private final OrderSubject trackingSubject;
 
-    public WarehouseFulfillmentFacade(OrderTrackingSubject trackingSubject) {
+    public WarehouseFulfillmentFacade(OrderSubject trackingSubject) {
         this.trackingSubject = Objects.requireNonNull(trackingSubject, "Tracking subject cannot be null.");
     }
 
     public static WarehouseFulfillmentFacade createDefaultFacade() {
-        OrderTrackingSubject subject = new OrderTrackingSubject();
+        OrderSubject subject = new OrderTrackingSubject();
         subject.registerObserver(new WarehouseDashboardNotifier());
         subject.registerObserver(new CustomerNotificationSubscriber());
         subject.registerObserver(new AuditLogSubscriber());
@@ -78,15 +79,18 @@ public class WarehouseFulfillmentFacade {
         Objects.requireNonNull(carrierFactory, "CarrierFactory cannot be null.");
         Objects.requireNonNull(costStrategy, "CostCalculationStrategy cannot be null.");
 
+        OrderStatus currentStatus = OrderStatus.CREATED;
+
         try {
             runWarehouseSafetyChecks(order);
 
             trackingSubject.notifyObservers(
                     order,
-                    OrderStatus.CREATED,
+                    currentStatus,
                     OrderStatus.INSPECTED_AND_PACKED,
                     "Items verified and packed"
             );
+            currentStatus = OrderStatus.INSPECTED_AND_PACKED;
 
             FulfillablePackage pkg = buildDecoratedPackage(order, fragile, insuranceRate, coldChainRange);
 
@@ -98,27 +102,29 @@ public class WarehouseFulfillmentFacade {
             Carrier carrier = carrierFactory.createCarrier();
             trackingSubject.notifyObservers(
                     order,
-                    OrderStatus.INSPECTED_AND_PACKED,
+                    currentStatus,
                     OrderStatus.CARRIER_ASSIGNED,
                     "Assigned to " + carrier.getCarrierName()
             );
+            currentStatus = OrderStatus.CARRIER_ASSIGNED;
 
             String notes = String.join("; ", pkg.getHandlingInstructions());
             String trackingNumber = carrier.dispatchConsignment(order, notes);
 
             trackingSubject.notifyObservers(
                     order,
-                    OrderStatus.CARRIER_ASSIGNED,
+                    currentStatus,
                     OrderStatus.IN_TRANSIT,
                     "Handed over with tracking " + trackingNumber
             );
+            currentStatus = OrderStatus.IN_TRANSIT;
 
             printDispatchSummary(order, carrier, trackingNumber, finalWeight, shippingCost, handlingFee, totalCost, pkg.getCareTags());
 
         } catch (Exception e) {
             trackingSubject.notifyObservers(
                     order,
-                    OrderStatus.INSPECTED_AND_PACKED,
+                    currentStatus,
                     OrderStatus.EXCEPTION_ENCOUNTERED,
                     "Fulfillment failed: " + e.getMessage()
             );
@@ -165,7 +171,7 @@ public class WarehouseFulfillmentFacade {
             List<String> careTags
     ) {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        System.out.println("Dispatch Receipt (" + order.getOrderId() + ") ");
+        System.out.println("--- Dispatch Receipt (" + order.getOrderId() + ") ---");
         System.out.println("  Carrier       : " + carrier.getCarrierName());
         System.out.println("  Tracking Code : " + trackingNumber);
         System.out.printf("  Final Weight  : %.2f kg%n", finalWeight);
@@ -174,6 +180,6 @@ public class WarehouseFulfillmentFacade {
         System.out.println("  Total Cost    : " + totalCost + " KZT");
         System.out.println("  Care Tags     : " + careTags);
         System.out.println("  Dispatched At : " + timestamp);
-        System.out.println("\n");
+        System.out.println("-----------------------------------\n");
     }
 }
