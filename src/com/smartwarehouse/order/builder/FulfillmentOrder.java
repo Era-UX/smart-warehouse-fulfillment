@@ -23,6 +23,7 @@ public final class FulfillmentOrder {
     private final String customerEmail;
     private final Address originAddress;
     private final Address destinationAddress;
+    private final List<OrderItem> items;
     private final PriorityLevel priority;
     private final double lengthCm;
     private final double widthCm;
@@ -36,6 +37,7 @@ public final class FulfillmentOrder {
         this.customerEmail = builder.customerEmail;
         this.originAddress = builder.originAddress;
         this.destinationAddress = builder.destinationAddress;
+        this.items = List.copyOf(builder.items);
         this.priority = builder.priority;
         this.lengthCm = builder.lengthCm;
         this.widthCm = builder.widthCm;
@@ -62,6 +64,10 @@ public final class FulfillmentOrder {
 
     public Address getDestinationAddress() {
         return destinationAddress;
+    }
+
+    public List<OrderItem> getItems() {
+        return items;
     }
 
     public PriorityLevel getPriority() {
@@ -192,6 +198,13 @@ public final class FulfillmentOrder {
         private void validateItems() {
             if (items.isEmpty()) {
                 throw new IllegalArgumentException("Order must contain at least one item.");
+            }
+            double itemsWeight = 0.0;
+            for (OrderItem item : items) {
+                itemsWeight += item.unitWeightKg() * item.quantity();
+            }
+            if (weightKg < itemsWeight) {
+                throw new IllegalArgumentException("Order weightKg cannot be less than total items weight: " + itemsWeight);
             }
         }
     }

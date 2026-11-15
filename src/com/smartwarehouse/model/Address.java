@@ -15,6 +15,9 @@ public record Address(
         if (city == null || city.isBlank()) {
             throw new IllegalArgumentException("City cannot be blank.");
         }
+        if (region == null || region.isBlank()) {
+            throw new IllegalArgumentException("Region cannot be blank.");
+        }
         if (postalCode == null || postalCode.isBlank()) {
             throw new IllegalArgumentException("Postal code cannot be blank.");
         }
